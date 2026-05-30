@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gpu-dra-smoke
+---
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaimTemplate
+metadata:
+  namespace: gpu-dra-smoke
+  name: single-gpu
+spec:
+  spec:
+    devices:
+      requests:
+        - name: gpu
+          exactly:
+            deviceClassName: gpu.nvidia.com
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: gpu-dra-smoke
+  name: dra-smoke
+  labels:
+    app: dra-smoke
+spec:
+  restartPolicy: Never
+  containers:
+    - name: cuda
+      image: ubuntu:22.04
+      command:
+        - bash
+        - -lc
+      args:
+        - |
+          nvidia-smi -L
+          nvidia-smi
+      resources:
+        claims:
+          - name: shared-gpu
+  resourceClaims:
+    - name: shared-gpu
+      resourceClaimTemplateName: single-gpu
